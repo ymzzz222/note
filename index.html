@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <link rel="shortcut icon" href="./favicon.ico" />
+    <link rel="shortcut icon" href="favicon.ico" />
     <title>贺老师专属</title>
     <style>
       html {
@@ -57,7 +57,10 @@
   </head>
   <body>
     <div id="app">
-      <input type="file" @change="importFile" />
+      <div class="but">
+        <input type="file" @change="importFile" />
+        <button @click="exportExcel">导出</button>
+      </div>
       <table>
         <thead>
           <tr>
@@ -84,6 +87,7 @@
       createApp({
         setup() {
           const maps = ref();
+          const list = ref([]);
           let wb; //读取完成的数据
           const importFile = (obj) => {
             console.log(obj);
@@ -130,19 +134,21 @@
               const arry = [];
               for (key of keys) {
                 arry.push({
-                  name: key,
-                  lesson: map.get(key).lesson,
-                  count: map.get(key).count,
+                  姓名: key,
+                  课时: map.get(key).count,
+                  补课: map.get(key).lesson,
                 });
               }
-              console.log(arry);
+              console.log(map, arry);
               maps.value = map;
-              exportExcel(arry, '课程表');
+              list.value = arry;
             };
             reader.readAsBinaryString(f);
           };
 
-          const exportExcel = (data, filename) => {
+          const exportExcel = () => {
+            const data = list.value;
+            const filename = '课程表';
             /* 如果没有导入xlsx组件则导入 */
             if (typeof XLSX == 'undefined') XLSX = require('xlsx');
             // 将一个 json 对象转换成一个 sheet 对象
@@ -194,6 +200,7 @@
           return {
             importFile,
             maps,
+            exportExcel,
           };
         },
       }).mount('#app');
