@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link rel="shortcut icon" href="favicon.ico" />
     <title>贺老师专属</title>
     <style>
       html {
@@ -125,11 +126,71 @@
                   });
                 }
               });
-              console.log(map);
+              const keys = map.keys();
+              const arry = [];
+              for (key of keys) {
+                arry.push({
+                  name: key,
+                  lesson: map.get(key).lesson,
+                  count: map.get(key).count,
+                });
+              }
+              console.log(arry);
               maps.value = map;
+              exportExcel(arry, '课程表');
             };
             reader.readAsBinaryString(f);
           };
+
+          const exportExcel = (data, filename) => {
+            /* 如果没有导入xlsx组件则导入 */
+            if (typeof XLSX == 'undefined') XLSX = require('xlsx');
+            // 将一个 json 对象转换成一个 sheet 对象
+            let sheet = XLSX.utils.json_to_sheet(data);
+            // 创建虚拟的 excel 表格（workbook）
+            let wb = XLSX.utils.book_new();
+            // 把 sheet 添加到 workbook 里
+            XLSX.utils.book_append_sheet(wb, sheet, 'sheetName');
+            // 导出的方法 1（简单版本）
+            XLSX.writeFile(wb, filename + '.xlsx');
+            // 导出的方法 2（复杂版本）
+            // 把workbook转成blob
+            let blob = workbook2blob(wb);
+            // 利用a标签和createObjectURL实现下载功能，导出工作薄
+            openDownloadDialog(blob, 'excel的标题.xlsx');
+          };
+          const openDownloadDialog = (url, saveName) => {
+            if (typeof url == 'object' && url instanceof Blob) {
+              url = URL.createObjectURL(url); // 创建blob地址
+            }
+            let aLink = document.createElement('a');
+            aLink.href = url;
+            aLink.download = saveName || ''; // HTML5新增的属性，指定保存文件名，可以不要后缀，注意，file:///模式下不会生效
+            let event;
+            if (window.MouseEvent) event = new MouseEvent('click');
+            else {
+              event = document.createEvent('MouseEvents');
+              event.initMouseEvent(
+                'click',
+                true,
+                false,
+                window,
+                0,
+                0,
+                0,
+                0,
+                0,
+                false,
+                false,
+                false,
+                false,
+                0,
+                null
+              );
+            }
+            aLink.dispatchEvent(event);
+          };
+
           return {
             importFile,
             maps,
